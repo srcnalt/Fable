@@ -1,0 +1,8 @@
+{
+    "projFile": "./game.fsx",
+    "sourceMaps": true,
+    "rollup": {
+        "dest": "./out/bundle.js",
+        "external": "PIXI"
+    }
+}
