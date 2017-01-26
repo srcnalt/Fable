@@ -1,20 +1,3 @@
-(* 
-    ITT8060 -- Advanced Programming 2016
-    Department of Computer Science
-    Tallinn University of Technology
-    ------------------------------------------------
-
-    Bonus Coursework B
-
-    ------------------------------------------------
-    Name: Sercan Altundas
-    TUT Student ID: 166816IVSM
-    ------------------------------------------------
-*)
-
-//Making this game I used Fable.io's pixi example as a boiler-plate
-//and used their documentation at http://pixijs.github.io/examples/#/basics/basic.js
-
 #r "../../node_modules/fable-core/Fable.Core.dll"
 #load "../../node_modules/fable-import-pixi/Fable.Import.Pixi.fs"
 
@@ -26,8 +9,12 @@ open Fable.Import.Browser
 
 importAll "core-js"
 
+module screenSize =
+    let width   = 1024.
+    let height  = 600.
+
 let renderer =
-  Globals.autoDetectRenderer( 800., 600.)
+  Globals.autoDetectRenderer( screenSize.width, screenSize.height)
   |> unbox<SystemRenderer>
 
 let gameDiv = document.getElementById("game")
@@ -37,20 +24,26 @@ gameDiv.appendChild( renderer.view )
 
 let stage = Container()
 
-let backTexture = Texture.fromImage("img/back.png")
-let back = Sprite(backTexture)
+let back = Sprite(Texture.fromImage("img/back.png"))
 back.position.x <- 0.
 back.position.y <- 0.
 
 let mutable currentPlayer = "Tank1"
 
+module vars =
+    let menuWidth = 459.
+    let gameOverWidth = 387.
+    let tankWidth = 74.
+    let barrelWidth = 55.
+    let pinWidth = 26.
+
 module Menu =
     let logo = Sprite(Texture.fromImage("img/logo.png"))
-    logo.position.x <- 175.
+    logo.position.x <- (screenSize.width - vars.menuWidth) / 2.
     logo.position.y <- 75.
 
     let gameOver = Sprite(Texture.fromImage("img/gameOver.png"))
-    gameOver.position.x <- 210.
+    gameOver.position.x <- (screenSize.width - vars.gameOverWidth) / 2.
     gameOver.position.y <- 75.
     gameOver.visible <- false
 
@@ -71,16 +64,17 @@ module Tank1 =
 
 module Tank2 =
     let body = Sprite(Texture.fromImage("img/tank.png"))
-    body.position.x <- 715.
+    body.position.x <- screenSize.width - vars.tankWidth - 10.
     body.position.y <- 520.
 
     let barrel = Sprite(Texture.fromImage("img/barrel.png"))
     barrel.anchor.x <- 0.9
     barrel.anchor.y <- 0.5
-    barrel.position.x <- 735.
+    barrel.position.x <- screenSize.width - vars.barrelWidth - 10.
     barrel.position.y <- 525.
+
     let pin = Sprite(Texture.fromImage("img/p2.png"))
-    pin.position.x <- 740.
+    pin.position.x <- screenSize.width - vars.pinWidth - 35.
     pin.position.y <- 485.
     pin.visible <- false
 
@@ -166,10 +160,10 @@ let move (e : KeyboardEvent) =
 
 //check hit of a smaller rectangle in tank body texture
 let isHit (bullet:Sprite) (tank:Sprite) =
-    bullet.position.x     < tank.position.x + tank.width - 20. &&
-    tank.position.x + 20. < bullet.position.x + bullet.width   &&
+    bullet.position.x     < tank.position.x + tank.width - 10. &&
+    tank.position.x + 10. < bullet.position.x + bullet.width   &&
     bullet.position.y     < tank.position.y + tank.height      &&
-    tank.position.y + 20. < bullet.position.y + bullet.height
+    tank.position.y + 10. < bullet.position.y + bullet.height
 
 //mark current player
 let changePin name =
@@ -184,15 +178,15 @@ let changePin name =
 let checkBullet shot =
     if shot then
         drag <- drag + 0.1
-        bullet.position.x <- bullet.position.x - (8.5 * Math.Sin(bulletRot)) 
-        bullet.position.y <- bullet.position.y - (8.5 * Math.Cos(bulletRot)) + drag
+        bullet.position.x <- bullet.position.x - (10. * Math.Sin(bulletRot)) 
+        bullet.position.y <- bullet.position.y - (10. * Math.Cos(bulletRot)) + drag
 
-    if bullet.position.y < 0. || bullet.position.y > 600. || bullet.position.x < 0. || bullet.position.x > 800. then
+    if bullet.position.y < 0. || bullet.position.y > screenSize.height - 55. || bullet.position.x < 0. || bullet.position.x > screenSize.width then
         if currentPlayer = "Tank1" then
             bullet.position.x <- 55.
             bullet.position.y <- 525.
         else
-            bullet.position.x <- 735.
+            bullet.position.x <- screenSize.width - vars.tankWidth + 5.
             bullet.position.y <- 525.
 
         changePin currentPlayer
@@ -210,7 +204,7 @@ let checkBullet shot =
 
 document.addEventListener_keydown(fun e -> move(e))
 
-sound("snd/loop.wav")
+//sound("snd/loop.wav")
 
 //adding all game objects to screen
 stage.addChild(back)            |> ignore
