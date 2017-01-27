@@ -37,6 +37,24 @@ module vars =
     let barrelWidth = 55.
     let pinWidth = 26.
 
+module wind =
+    let wind  = Sprite(Texture.fromImage("img/wind.png"))
+    let width = 49.
+
+    let R1 = Sprite(Texture.fromImage("img/windR1.png"))
+    let R2 = Sprite(Texture.fromImage("img/windR2.png"))
+    let R3 = Sprite(Texture.fromImage("img/windR3.png"))
+
+    let L1 = Sprite(Texture.fromImage("img/windL1.png"))
+    let L2 = Sprite(Texture.fromImage("img/windL2.png"))
+    let L3 = Sprite(Texture.fromImage("img/windL3.png"))
+        
+    let mutable currentInd  = L1
+    currentInd.position.x <- (screenSize.width - width) / 2.
+    currentInd.position.y <- 20. 
+
+    let mutable currentWind = 0.
+
 module Menu =
     let logo = Sprite(Texture.fromImage("img/logo.png"))
     logo.position.x <- (screenSize.width - vars.menuWidth) / 2.
@@ -107,6 +125,28 @@ let selectTank name =
 [<Emit("(new Audio($0)).play();")>]
 let sound(file:string) : unit = failwith "never"
 
+let getWind n = 
+    wind.currentWind <- (float) (Random().Next() % 7 - 3)
+
+    let w = wind.currentWind
+
+    printfn "%f" w
+    
+    if w > 0. then
+        if w = 1. then
+            wind.currentInd.texture <- wind.R1.texture
+        else if w = 2. then
+            wind.currentInd.texture <- wind.R2.texture
+        else
+            wind.currentInd.texture <- wind.R3.texture
+    else
+        if w = -1. then
+            wind.currentInd.texture <- wind.L1.texture
+        else if w <= -2. then
+            wind.currentInd.texture <- wind.L2.texture
+        else
+            wind.currentInd.texture <- wind.L3.texture
+
 //keyboard controls
 let move (e : KeyboardEvent) =
     let keyCode = int e.keyCode
@@ -140,6 +180,7 @@ let move (e : KeyboardEvent) =
     else if keyCode = 32 && not gameStarted then
         Menu.logo.visible <- false
         gameStarted <- true
+        getWind 0
     else if keyCode = 32 && gameOver then   //reset game states to initials
         gameStarted <- true
         gameOver <- false
@@ -178,10 +219,10 @@ let changePin name =
 let checkBullet shot =
     if shot then
         drag <- drag + 0.1
-        bullet.position.x <- bullet.position.x - (10. * Math.Sin(bulletRot)) 
-        bullet.position.y <- bullet.position.y - (10. * Math.Cos(bulletRot)) + drag
+        bullet.position.x <- bullet.position.x - (11. * Math.Sin(bulletRot) - wind.currentWind) 
+        bullet.position.y <- bullet.position.y - (11. * Math.Cos(bulletRot)) + drag
 
-    if bullet.position.y < 0. || bullet.position.y > screenSize.height - 55. || bullet.position.x < 0. || bullet.position.x > screenSize.width then
+    if bullet.position.y < -screenSize.height || bullet.position.y > screenSize.height - 55. || bullet.position.x < 0. || bullet.position.x > screenSize.width then
         if currentPlayer = "Tank1" then
             bullet.position.x <- 55.
             bullet.position.y <- 525.
@@ -193,6 +234,8 @@ let checkBullet shot =
 
         isShot <- false
         drag <- 0.
+
+        getWind 0
 
     let body = selectTank currentPlayer |> fst
 
@@ -217,6 +260,7 @@ stage.addChild(Tank2.body)      |> ignore
 stage.addChild(Tank2.pin)       |> ignore
 stage.addChild(Menu.logo)       |> ignore
 stage.addChild(Menu.gameOver)   |> ignore
+stage.addChild(wind.currentInd) |> ignore
 
 //game update method
 let rec animate (dt:float) =
